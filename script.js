@@ -11,8 +11,8 @@ async function init() {
     }
 
     inicializar = true;
-    const modelURL = URL + "model.json";
-    const metadataURL = URL + "metadata.json";
+    const modelURL = URL + "Imagem/model.json";
+    const metadataURL = URL + "Imagem/metadata.json";
 
     // load the model and metadata
     // Refer to tmImage.loadFromFiles() in the API to support files from a file picker
@@ -52,6 +52,7 @@ async function predict() {
     const prediction = await model.predict(webcam.canvas);
     const agora = Date.now();
     let probabilidadecelular = 0;
+    let probabilidadelivro = 0;
     if (agora - ultimaatualizacaotempo > atrasotempo) {
         ultimaatualizacaotempo = agora;
     for (let i = 0; i < maxPredictions; i++) {
@@ -62,22 +63,30 @@ async function predict() {
 
             if (prediction[i].className === "celular") {
                 probabilidadecelular = percent;
-                
+            } else if (prediction[i].className === "livro") {
+                probabilidadelivro = percent;
             }
     }   
     if (probabilidadecelular > 75) {
         alerta.style.visibility = "visible";
         alerta.innerText = "Deixe o celular de lado"
         tempo.style.visibility = "visible";
+        audio.setAttribute("autoplay", "");
+        audio.play();
         iniciartempo();
+    } else if (probabilidadelivro > 75){
+        alerta.style.visibility = "visible";
+        alerta.innerText = "Foco"
     } else {
         alerta.style.visibility = "hidden";
         alerta.innerText = "";
         parartempo();
     }
+        
+    }
 }
     
-    }
+    
 
 let iniciotempo = false;
 let tempoinicial = 0;
@@ -103,4 +112,5 @@ function atualizartempo() {
 
 const alerta = document.getElementById("mensagem");
 const tempo = document.getElementById("timer");
+const audio = document.getElementById("audio");
 

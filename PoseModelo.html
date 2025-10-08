@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="pose.css">
+    <title>Modelo de pose</title>
+</head>
+<body>
+    <h1>Ajudante de estudos online Pose</h1>
+    <div id="timer"></div>
+    <div class="botao">
+        <button type="button" onclick="init()">Start</button>
+    </div>
+    <div id="label-container"></div>
+    <div class="container">
+        <div class="foto"><canvas id="canvas"></canvas></div>
+        <div id="mensagem"></div>
+    </div>
+    
+    <audio src="notificacao.mp3" id="audio"></audio>
+    
+    
+
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@1.3.1/dist/tf.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/pose@0.8/dist/teachablemachine-pose.min.js"></script>
+    <script src="pose.js"></script>
+
+</body>
+</html>
