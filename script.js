@@ -1,97 +1,99 @@
+// Caminho base dos arquivos do modelo
 const URL = "./";
 
-let model, webcam, labelContainer, maxPredictions;
-let inicializar = false;
-
-    // Load the image model and setup the webcam
+// Função principal que inicializa o modelo e a webcam
 async function init() {
-
-    if (inicializar) {
-        return
-    }
-
-    inicializar = true;
+    // URLs do modelo e dos metadados (Teachable Machine)
     const modelURL = URL + "Imagem/model.json";
     const metadataURL = URL + "Imagem/metadata.json";
 
-    // load the model and metadata
-    // Refer to tmImage.loadFromFiles() in the API to support files from a file picker
-    // or files from your local hard drive
-    // Note: the pose library adds "tmImage" object to your window (window.tmImage)
+    // Carrega o modelo e os metadados
     model = await tmImage.load(modelURL, metadataURL);
     maxPredictions = model.getTotalClasses();
 
-    // Convenience function to setup a webcam
-    const flip = true; // whether to flip the webcam
-    webcam = new tmImage.Webcam(200, 200, flip); // width, height, flip
-    await webcam.setup(); // request access to the webcam
-    await webcam.play();
-    window.requestAnimationFrame(loop);
+    // Configura a webcam
+    const flip = true; // define se a imagem da webcam será espelhada
+    webcam = new tmImage.Webcam(200, 200, flip); // largura, altura, flip
+    await webcam.setup(); // solicita acesso à webcam
+    await webcam.play(); // inicia a captura de vídeo
+    window.requestAnimationFrame(loop); // inicia o loop de predição
 
-    // append elements to the DOM
-   
+    // Adiciona o vídeo da webcam na página
     document.getElementById("webcam-container").appendChild(webcam.canvas);
     labelContainer = document.getElementById("label-container");
-    labelContainer.style.visibility="visible";
-    for (let i = 0; i < maxPredictions; i++) { // and class labels
+    labelContainer.style.visibility = "visible";
+
+    // Cria elementos para exibir as predições
+    for (let i = 0; i < maxPredictions; i++) {
         labelContainer.appendChild(document.createElement("div"));
     }
 }
 
+// Loop principal que atualiza a webcam e chama as predições
 async function loop() {
-    webcam.update(); // update the webcam frame
-    await predict();
-    window.requestAnimationFrame(loop);
+    webcam.update(); // atualiza o frame da webcam
+    await predict(); // faz a predição
+    window.requestAnimationFrame(loop); // repete o processo
 }
 
+// Controle de tempo entre predições
 let ultimaatualizacaotempo = 0;
-const atrasotempo = 1000;
-// run the webcam image through the image model
+const atrasotempo = 1000; // intervalo de 1 segundo entre atualizações
+
+// Função que realiza a predição do modelo
 async function predict() {
-    // predict can take in an image, video or canvas html element
-    const prediction = await model.predict(webcam.canvas);
+    const prediction = await model.predict(webcam.canvas); // obtém predições do modelo
     const agora = Date.now();
     let probabilidadecelular = 0;
     let probabilidadelivro = 0;
+
+    // Garante que as predições só sejam atualizadas a cada segundo
     if (agora - ultimaatualizacaotempo > atrasotempo) {
         ultimaatualizacaotempo = agora;
-    for (let i = 0; i < maxPredictions; i++) {
+
+        // Exibe a porcentagem de probabilidade para cada classe
+        for (let i = 0; i < maxPredictions; i++) {
             let percent = Math.round(prediction[i].probability * 100);
-            let proximo = Math.round(percent /25) * 25;
+            let proximo = Math.round(percent / 25) * 25; // arredonda para múltiplos de 25
             if (proximo > 100) proximo = 100;
+
+            // Atualiza o texto na tela
             labelContainer.childNodes[i].innerHTML = prediction[i].className + ": " + proximo + "%";
 
+            // Guarda a probabilidade de cada classe principal
             if (prediction[i].className === "celular") {
                 probabilidadecelular = percent;
             } else if (prediction[i].className === "livro") {
                 probabilidadelivro = percent;
             }
-    }   
-    if (probabilidadecelular > 75) {
-        alerta.style.visibility = "visible";
-        alerta.innerText = "Deixe o celular de lado"
-        tempo.style.visibility = "visible";
-        audio.setAttribute("autoplay", "");
-        audio.play();
-        iniciartempo();
-    } else if (probabilidadelivro > 75){
-        alerta.style.visibility = "visible";
-        alerta.innerText = "Foco"
-    } else {
-        alerta.style.visibility = "hidden";
-        alerta.innerText = "";
-        parartempo();
-    }
-        
+        }
+
+        // Define ações de acordo com a detecção
+        if (probabilidadecelular > 75) {
+            alerta.style.visibility = "visible";
+            alerta.innerText = "Deixe o celular de lado";
+            tempo.style.visibility = "visible";
+            audio.setAttribute("autoplay", "");
+            audio.play();
+            iniciartempo();
+        } else if (probabilidadelivro > 75) {
+            alerta.style.visibility = "visible";
+            alerta.innerText = "Foco";
+        } else {
+            alerta.style.visibility = "hidden";
+            alerta.innerText = "";
+            parartempo();
+        }
     }
 }
-    
-    
+
+// Controle de tempo distraído
 
 let iniciotempo = false;
 let tempoinicial = 0;
 let intervalo;
 
+// Inicia a contagem do tempo de distração
 function iniciartempo() {
     if (!iniciotempo) {
         iniciotempo = true;
@@ -100,17 +102,19 @@ function iniciartempo() {
     }
 }
 
+// Para a contagem de tempo
 function parartempo() {
     iniciotempo = false;
     clearInterval(intervalo);
 }
 
+// Atualiza o tempo de distração na tela
 function atualizartempo() {
     const tempo = ((Date.now() - tempoinicial) / 1000).toFixed(1);
-    document.getElementById("timer").innerText = "Tempo distraido: " + tempo + "s";
+    document.getElementById("timer").innerText = "Tempo distraído: " + tempo + "s";
 }
 
+// Referências aos elementos da página
 const alerta = document.getElementById("mensagem");
 const tempo = document.getElementById("timer");
 const audio = document.getElementById("audio");
-
